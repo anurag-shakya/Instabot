@@ -50,7 +50,8 @@ def start_bot():
              7. Delete negative comments on own recent post 
              8. Delete negative comments on a recent post of a user by username
              9. More Options             <----
-             10. Exit from Instabot menu
+             10. To print comments of a recent post of a user 
+             11. Exit from Instabot menu
              
          \033[4;30;44m  Note: These features will be in reference with your Sandbox Users \033[0;0m
                 \033[4;30;44m And the scope with which Access Token is authorized \033[0;0m
@@ -100,8 +101,14 @@ def start_bot():
         elif choice == "9":
             more_options()
 
-        # to exit from the instabot menu
+        # to print comments over a recent post of a user
         elif choice == "10":
+            insta_username = raw_input("Enter the username of the user: ")
+            fetch_user_comments(insta_username)
+
+
+        # to exit from the instabot menu
+        elif choice == "11":
             print "Thank you for using Instabot. \n All changes saved!\n  exiting ..."
             show_menu = False
 
@@ -152,6 +159,7 @@ def self_info():
         print "\n\033[1;30;46m", "Name : %s \n User name : %s \n Total Posts made : %d \n %s follows : %d  people \n %d people are following %s \n\033[m" \
                                  % (name, user_name, posts, name.partition(" ")[0], follows, following,
                                     name.partition(" ")[0])
+        print "\nEntering Main Menu... \n"
 
     # if request made is unsuccessfull
     else:
@@ -597,6 +605,67 @@ def delete_negative_comments_of_user(insta_username):
 
 
 
+# -------------------------------  function fetch_user_comments() starts here  ------------------------------------------------------------------------
+
+# function name : fetch_user_comments(), used to fetch comments of a user by passing their username as parameter
+
+def fetch_user_comments(insta_username):
+
+    # fetching media id of the recent post by passing instagram username
+    media_id = get_user_post(insta_username)
+
+    # If get_user_post() returns no post to show then,
+    if media_id == "no post to show":
+        print "So you can't make any sentimental analysis"
+
+    # And if get_user_post() returns unsuccsessfull request then,
+    elif media_id == "unsuccessfull request":
+        print "\n please check request URL \n"
+
+    # And if get_user_post() returns the id(it is a string) of recent post
+    elif media_id != None:
+
+        # creating request url to get access to comments of a recent post by giving media_id and ACCESS_KEY as parameters.
+        request_url = (BASE_URL + "media/%s/comments/?access_token=%s") % (media_id, ACCESS_KEY)
+        print "GET request url [to get comments data]: %s" % (request_url)
+
+        # to make request and save the response in json format
+        comment_info = requests.get(request_url).json()
+
+        # if request made is successfull
+        if comment_info["meta"]["code"] == 200:
+
+            # Check if we have comments on the post or not
+            if len(comment_info["data"]) > 0:
+
+                # And then print them one by one
+                print("\n\nS.No.    Name         Comments \n==============================")
+                count_comments = 0
+                for comment in comment_info["data"]:
+                    comment_made_by = "\033[1;31m" + comment["from"]["full_name"].capitalize() + "\033[0;0m"
+                    comment_text = " \033[4;30;44m" + comment["text"] + "\033[0;0m"
+                    count_comments += 1
+                    print "%d.    %s  %s\n" % (count_comments, comment_made_by, comment_text)
+
+                print "Total comments: %s" % (count_comments)
+
+            # Check if do not found any comment on the post
+            else:
+                print "No comments found. \n"
+
+        # if request made is unsuccessfull
+        else:
+            print "Status code other than 200 received!. \n check for Comment request_url [to get recent comments] \n"
+
+    # And if get_user_post() returns None ie, type(media_id) == NoneType then,
+    else:
+        print "Please enter a valid Instagram username \n"
+
+
+# --------------------------------  function fetch_user_comments() ends here  -------------------------------------------------------------------------
+
+
+
 #--------------------------------  function more_options() starts here  -------------------------------------------------------------------------------
 
 # function name: more_options(), used to provide some extra features [exploring some more features of Instagram API]
@@ -745,7 +814,8 @@ start_bot()
 10. delete_negative_comments_self()    : To delete negative comments on own recent post after doing sentimental analysis
 10. delete_negative_comments_of_user() : To delete negative comments on the recent post of a user after doing sentimental analysis,
                                        it takes username as a parameter 
-11. more_options()   : Used to provide some extra features [exploring some more features of Instagram API]                                 
-12. user_follows()   : Used to check for the list people who are followed by 'self'
-13. check_followers_list()     : Used to check for the list people who follows 'self'
+11. fetch_user_comments()              : used to fetch comments of a user by passing their username as parameter                                       
+12. more_options()   : Used to provide some extra features [exploring some more features of Instagram API]                                 
+13. user_follows()   : Used to check for the list people who are followed by 'self'
+14. check_followers_list()     : Used to check for the list people who follows 'self'
 '''
